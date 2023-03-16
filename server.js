@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const axios = require("axios");
+const cors = require("cors");
 require("dotenv").config();
 
 const app = express();
@@ -15,17 +16,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.use(morgan("tiny"));
+app.use(cors());
 
 app.get("/api/weather", async (req, res) => {
   try {
+    const { latitude, longitude } = req.query;
+
+    if (!latitude) {
+      return res
+        .status(400)
+        .json({ message: "latitude parameter is mandatory" });
+    }
+
+    if (!longitude) {
+      return res
+        .status(400)
+        .json({ message: "longitude parameter is mandatory" });
+    }
+
     const responce = await axios.get(thirdPartyBaseUrl, {
       params: {
         key: thirdPartyApiKey,
-        lat: "38.123",
-        lon: "-78.543",
+        lat: latitude,
+        lon: longitude,
       },
     });
-    const [weatherData] = responce.data.data;
+    // const [weatherData] = responce.data.data;
+    const weatherData = responce.data.data[0];
     const {
       city_name,
       weather: { description },
